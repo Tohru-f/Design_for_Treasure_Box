@@ -1,0 +1,83 @@
+[users]
+  *id {label: "bigint, not null"}
+  username {label: "varchar, not null, uniq"}
+  email {label: "varchar, not null, uniq" }
+  photo {label: "varchar, null"}
+  profile {label: "varchar, null"}
+  repository {label: "varchar - array, null" }
+  plan {label: "enum(0,600,800,1000), default: 0, not null" }
+  advice {label: "varchar - array, null"}
+  deleted_at {label: "datetime, null"}
+  created_at { label: "datetime, not null"}
+  updated_at { label: "datetime, not null"}
+
+[reviews] {bgcolor: "#d0e0d0"}
+  *id {label: "bigint, not null"}
+  user_id {label: "bigint, not null, FK(users)"}
+  title {label: "varchar, not null"}
+  language {label: "varchar, not null"}
+  review_comment {label: "text, not null"}
+  pointed_out_code {label: "text, not null"}
+  ai_modified_code {label: "text, not null"}
+  tag_id {label: "bigint, not null, FK(users)"}
+  importance {label: "enum('low', 'medium', 'high'), default: 'medium', not null"}
+  reason {label: "text, not null"}
+  link_to_pullrequest {label: "varchar, not null"}
+  created_at { label: "datetime, not null"}
+  updated_at { label: "datetime, not null"}
+
+[questions] {bgcolor: "#B4B0FF"}
+  *id {label: "bigint, not null"}
+  user_id {label: "bigint, not null, FK(users)"}
+  reviews_id {label: "bigint, not null, FK(users)"}
+  tag_id {label: "bigint, not null, FK(users)"}
+  code_for_learning {label: "varchar, not null"}
+  modified_code {label: "varchar"}
+  created_at { label: "datetime, not null"}
+  updated_at { label: "datetime, not null"}
+
+[organization_users] {bgcolor: "#FFCFFF"}
+  *id {label: "bigint, not null"}
+  user_id {label: "bigint, not null, FK(users)"}
+  organization_id {label: "bigint, not null, FK(users)"}
+  role {label: "enum('owner', 'member'), default: 'member' , not null"}
+  created_at { label: "datetime, not null"}
+  updated_at { label: "datetime, not null"}
+  # UNIQUE(organization_id, user_id)
+
+[organizations] {bgcolor: "#4FD3FF"}
+  *id {label: "bigint, not null"}
+  name {label: "varchar, not null"}
+  number_of_members {label: "integer, not null"}
+  created_at { label: "datetime, not null"}
+  updated_at { label: "datetime, not null"}
+
+[inquiries] {bgcolor: "#9DDF3A"}
+  *id {label: "bigint, not null"}
+  user_id {label: "bigint, not null, FK(users)"}
+  subject {label: "varchar, not null"}
+  message {label: "text, not null"}
+  created_at { label: "datetime, not null"}
+  updated_at { label: "datetime, not null"}
+
+[tags] {bgcolor: "#C8CDCF"}
+  *id {label: "bigint, not null"}
+  name {label: "varchar, not null"}
+  rank {label: "integer, null" }
+  number_of_articles {label: "integer ,not null" }
+  created_at { label: "datetime, not null"}
+  updated_at { label: "datetime, not null"}
+
+# Cardinality    Syntax
+# 0 or 1         ?
+# exactly 1      1
+# 0 or more      *
+# 1 or more      +
+users 1--* reviews
+users 1--* questions
+users 1--* organization_users
+users 1--* inquiries
+tags 1--* reviewed_codes
+tags 1--* questions
+reviews 1--+ questions
+organizations 1--* organization_users
