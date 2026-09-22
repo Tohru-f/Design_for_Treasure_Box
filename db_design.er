@@ -13,7 +13,7 @@
 
 [reviews] {bgcolor: "#d0e0d0"}
   *id {label: "bigint, not null"}
-  user_id {label: "bigint, not null, FK(users)"}
+  generator_id {label: "bigint, not null, FK(users - user_id)"}
   title {label: "varchar, not null"}
   language {label: "varchar, not null"}
   review_comment {label: "text, not null"}
@@ -28,22 +28,21 @@
 
 [questions] {bgcolor: "#B4B0FF"}
   *id {label: "bigint, not null"}
-  user_id {label: "bigint, not null, FK(users)"}
-  reviews_id {label: "bigint, not null, FK(users)"}
+  generator_id {label: "bigint, not null, FK(users - user_id)"}
+  review_id {label: "bigint, not null, FK(users)"}
   tag_id {label: "bigint, not null, FK(users)"}
   code_for_learning {label: "varchar, not null"}
-  modified_code {label: "varchar"}
   created_at { label: "datetime, not null"}
   updated_at { label: "datetime, not null"}
 
 [organization_users] {bgcolor: "#FFCFFF"}
   *id {label: "bigint, not null"}
-  user_id {label: "bigint, not null, FK(users)"}
+  generator_id {label: "bigint, not null, FK(users - user_id)"}
   organization_id {label: "bigint, not null, FK(users)"}
   role {label: "enum('owner', 'member'), default: 'member' , not null"}
   created_at { label: "datetime, not null"}
   updated_at { label: "datetime, not null"}
-  # UNIQUE(organization_id, user_id)
+  # INDEX(organization_id, user_id), UNIQUE
 
 [organizations] {bgcolor: "#4FD3FF"}
   *id {label: "bigint, not null"}
@@ -54,7 +53,7 @@
 
 [inquiries] {bgcolor: "#9DDF3A"}
   *id {label: "bigint, not null"}
-  user_id {label: "bigint, not null, FK(users)"}
+  generator_id {label: "bigint, not null, FK(users - user_id)"}
   subject {label: "varchar, not null"}
   message {label: "text, not null"}
   created_at { label: "datetime, not null"}
@@ -68,16 +67,84 @@
   created_at { label: "datetime, not null"}
   updated_at { label: "datetime, not null"}
 
+[bookmarks]
+  *id {label: "bigint, not null"}
+  solver_id {label: "bigint, not null, FK(users - user_id)"}
+  bookmarkable_type {label: "enum('questions', 'vulnerability_questions'), default: 'questions' , not null"}
+  bookmarkable_id {label: "bigint, not null, FK(questions or vulnerability_questions)"}
+  created_at { label: "datetime, not null"}
+  updated_at { label: "datetime, not null"}
+  # INDEX(bookmarkable_id, user_id), UNIQUE
+
+[auto_reviews]
+  *id {label: "bigint, not null"}
+  solver_id {label: "bigint, not null, FK(users - user_id)"}
+  is_enabled {label: "boolean, default: 'true' not null"}
+  notification_time { label: "datetime, not null"}
+  max_daily_reviews {label: "integer, default: 3, not null"}
+  how_to_notify {label: "enum('slack', 'e-mail'), default: 'e-mail' , not null"}
+  created_at { label: "datetime, not null"}
+  updated_at { label: "datetime, not null"}
+
+[titles]
+  *id {label: "bigint, not null"}
+  name {label: "string, not null"}
+  description {label: "string, not null" }
+  required_review_count {label: "integer, not null"}
+  created_at { label: "datetime, not null"}
+  updated_at { label: "datetime, not null"}
+
+[user_titles]
+  *id {label: "bigint, not null"}
+  generator_id {label: "bigint, not null, FK(users - user_id)"}
+  title_id {label: "bigint, not null, FK(titles)"}
+  created_at { label: "datetime, not null"}
+  updated_at { label: "datetime, not null"}
+  # INDEX(title_id, user_id), UNIQUE
+
+[vulnerability_questions]
+  *id {label: "bigint, not null"}
+  title {label: "varchar, not null"}
+  language {label: "varchar, not null"}
+  comment {label: "text, not null"}
+  tag_id {label: "bigint, not null, FK(users)"}
+  importance {label: "enum('low', 'medium', 'high'), default: 'medium', not null"}
+  code_for_learning {label: "varchar, not null"}
+  status {label: "enum('draft', 'published', 'unpublished'), default: 'draft', not null"}
+  created_at { label: "datetime, not null"}
+  updated_at { label: "datetime, not null"}
+
+[user_questions]
+  *id {label: "bigint, not null"}
+  solver_id {label: "bigint, not null, FK(users - user_id)"}
+  question_type {label: "enum('review', 'vulnerable'), default: 'review' , not null"}
+  question_id {label: "bigint, not null, FK(reviews or vulnerability_questions)"}
+  submitted_code {label: "text, not null"}
+  status {label: "integer, not null"}
+  next_review_at { label: "datetime, not null"}
+  created_at { label: "datetime, not null"}
+  updated_at { label: "datetime, not null"}
+  # INDEX{user_id, question_id}, NO UNIQUE
+
 # Cardinality    Syntax
 # 0 or 1         ?
 # exactly 1      1
 # 0 or more      *
 # 1 or more      +
 users 1--* reviews
-users 1--* questions
 users 1--* organization_users
 users 1--* inquiries
-tags 1--* reviewed_codes
+tags 1--* vulnerability_questions
 tags 1--* questions
+tags 1--* reviews
 reviews 1--+ questions
 organizations 1--* organization_users
+users 1--* bookmarks
+questions 1--* bookmarks
+vulnerability_questions 1--* bookmarks
+users 1--* user_titles
+users 1--+ auto_reviews
+titles 1--* user_titles
+users 1--* user_questions
+questions 1--* user_questions
+vulnerability_questions 1--* user_questions
